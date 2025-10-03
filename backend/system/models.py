@@ -16,7 +16,8 @@ class Node(models.Model):
     we have all permissions, if 0000 none.
 
     The permission field contains plain number and to check
-    the option we check its binary value.
+    the option we check its binary value like if permission is 15
+    it means binary is 1111 - all permissions.
     """
     class Permissions(models.IntegerChoices):
         READ   = 1 << 0 # 0001
