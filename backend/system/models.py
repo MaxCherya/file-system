@@ -20,10 +20,10 @@ class Node(models.Model):
     it means binary is 1111 - all permissions.
     """
     class Permissions(models.IntegerChoices):
-        READ   = 1 << 0 # 0001
-        WRITE  = 1 << 1 # 0010
-        DELETE = 1 << 2 # 0100
-        ADMIN  = 1 << 3 # 1000
+        READ   = 1 << 0 # 0001 - 1
+        WRITE  = 1 << 1 # 0010 - 2
+        DELETE = 1 << 2 # 0100 - 4
+        ADMIN  = 1 << 3 # 1000 - 8
 
     name = models.CharField(max_length=255)
     node_type = models.CharField(max_length=10, choices=NodeTypes)
