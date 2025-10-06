@@ -31,9 +31,10 @@ class DirectoryView(APIView):
         }
         sort_field = sort_map.get(sort, "name")
 
-        parent = get_object_or_404(Node, id=parent_id, node_type=Node.NodeTypes.DIRECTORY, is_trashed=False)
-        if not (parent.permissions & Node.Permissions.READ):
-            return Response({"error": "Permission denied: READ"}, status=status.HTTP_403_FORBIDDEN)
+        if parent_id not in (None, "", "0"):
+            parent = get_object_or_404(Node, id=parent_id, node_type=Node.NodeTypes.DIRECTORY, is_trashed=False)
+            if not (parent.permissions & Node.Permissions.READ):
+                return Response({"error": "Permission denied: READ"}, status=status.HTTP_403_FORBIDDEN)
         
         # BUILDING QUERY
         if order == "desc":
