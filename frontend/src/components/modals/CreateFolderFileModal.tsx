@@ -4,6 +4,7 @@ import { useState } from "react";
 import SwitchButton from "../ui/btns/SwitchButton";
 import { toggleFunction } from "@/utils/lib_funcs";
 import FolderCreateForm from "../forms/FolderCreateForm";
+import FileCreateForm from "../forms/FileCreateForm";
 
 const CreateFolderFileModal: React.FC<{ toggleModal: () => void, parentId?: number }> = ({ toggleModal, parentId = 0 }) => {
 
@@ -11,7 +12,7 @@ const CreateFolderFileModal: React.FC<{ toggleModal: () => void, parentId?: numb
     const [isFile, setIsFile] = useState(true);
 
     return (
-        <div className="w-screen h-screen overflow-hidden flex flex-col items-center justify-center align-middle bg-black/85 fixed">
+        <div className="w-screen h-screen flex flex-col items-center justify-center align-middle bg-black/85 fixed z-[1000]">
 
             {/* CLOSE ICON */}
             <span className="fixed top-8 right-8 text-red-500 font-bold bg-white p-2 rounded-full cursor-pointer hover:bg-blue-600 hover:text-white"
@@ -28,11 +29,10 @@ const CreateFolderFileModal: React.FC<{ toggleModal: () => void, parentId?: numb
                 </div>
 
                 {isFile ? (
-                    <p>Test</p>
+                    <FileCreateForm onCreated={toggleModal} />
+
                 ) :
-                    <div className="w-full h-full">
-                        <FolderCreateForm parentFolderId={parentId} />
-                    </div>
+                    <FolderCreateForm parentFolderId={parentId} onCreated={toggleModal} />
                 }
 
             </div>

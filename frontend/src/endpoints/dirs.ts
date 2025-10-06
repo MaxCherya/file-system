@@ -10,9 +10,7 @@ import { NodeType } from "@/types/common";
     Return a promise that resolves to an array of NodeType.
 */
 export const getDirContent = async (pk?: number): Promise<NodeType[]> => {
-    if (pk === undefined) {
-        pk = 0;
-    }
+
     const res = await fetch(`${BASE_URL}/api/dirs/?parent_id=${pk}`, {
         method: 'GET',
     })
@@ -52,7 +50,7 @@ export const createFolder = async (
     const payload: Record<string, any> = {
         name: name,
         node_type: "DIRECTORY",
-        parent_id: parentId == (0 || null || undefined) ? null : parentId,
+        parent_id: parentId || null,
         permissions: permissions || undefined,
     };
 

@@ -12,12 +12,12 @@ interface Props {
 }
 
 
-const DirectoryViewFrame: React.FC<Props> = ({ folderId = 0 }) => {
+const DirectoryViewFrame: React.FC<Props> = ({ folderId }) => {
 
     // TANSTACK QUERY INIT
     const query = useQuery({
-        queryKey: ["directory", folderId],
-        queryFn: () => getDirContent(folderId),
+        queryKey: ["directory", folderId || 'root'],
+        queryFn: () => getDirContent(folderId || undefined),
     });
     const { isPending, isFetching, isSuccess, isError, error, data, status, fetchStatus } = query;
 

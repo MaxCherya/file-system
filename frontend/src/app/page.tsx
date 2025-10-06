@@ -26,7 +26,7 @@ export default function Home() {
 
       {/* DIRECTORY VIEW FRAME */}
       <div className="w-full h-full">
-        <DirectoryViewFrame folderId={0} />
+        <DirectoryViewFrame />
       </div>
 
     </div>

@@ -18,8 +18,11 @@ class DirectoryView(APIView):
     def get(self, request):
         # FILTER PARAMS
         parent_id = request.query_params.get("parent_id")
+        parent_id = None if parent_id == 'undefined' else parent_id
         sort = request.query_params.get("sort", "name")
         order = request.query_params.get("order", 'desc')
+
+        print(parent_id)
 
         # WHITELISTING USER'S INPUT
         # FOR SECURITY REASONS
@@ -31,7 +34,7 @@ class DirectoryView(APIView):
         }
         sort_field = sort_map.get(sort, "name")
 
-        if parent_id not in (None, "", "0"):
+        if parent_id not in (None, ""):
             parent = get_object_or_404(Node, id=parent_id, node_type=Node.NodeTypes.DIRECTORY, is_trashed=False)
             if not (parent.permissions & Node.Permissions.READ):
                 return Response({"message": "Permission denied: READ"}, status=status.HTTP_403_FORBIDDEN)
@@ -40,7 +43,7 @@ class DirectoryView(APIView):
         if order == "desc":
             sort_field = f"-{sort_field}"
         qs = Node.objects.filter(is_trashed=False)
-        if parent_id in(None, "", "0"):
+        if parent_id in(None, ""):
             qs = qs.filter(parent__isnull=True)
         else:
             qs = qs.filter(parent_id=parent_id)
@@ -472,6 +475,7 @@ class SearchView(APIView):
         include_trash = request.query_params.get("include_trash") in ("1", "true", "True")
         node_type = request.query_params.get("type")
         parent_id = request.query_params.get("parent_id")
+        parent_id = None if parent_id == 'undefined' else parent_id
         try:
             limit = max(1, min(int(request.query_params.get("limit", 100)), 500))
         except ValueError:

@@ -15,7 +15,7 @@ interface Props {
     onCreated?: () => void;
 }
 
-const FolderCreateForm: React.FC<Props> = ({ parentFolderId = 0, onCreated }) => {
+const FolderCreateForm: React.FC<Props> = ({ parentFolderId = undefined, onCreated }) => {
     const [name, setName] = useState("");
     const [permMask, setPermMask] = useState<number>(SERVER_DEFAULT_MASK);
     const qc = useQueryClient();
@@ -26,7 +26,7 @@ const FolderCreateForm: React.FC<Props> = ({ parentFolderId = 0, onCreated }) =>
             return createFolder(name, parentId, permissions);
         },
         onSuccess: (newNode: NodeType) => {
-            qc.setQueryData<NodeType[]>(["directory", parentFolderId], (old) => {
+            qc.setQueryData<NodeType[]>(["directory", parentFolderId || 'root'], (old) => {
                 if (!old) return [newNode];
                 return [newNode, ...old];
             });
