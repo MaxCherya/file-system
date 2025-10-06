@@ -16,7 +16,7 @@ export default function Home() {
 
       {/* CREATE MODAL */}
       {isCreateModeOpen && (
-        <CreateFolderFileModal toggleModal={() => toggleFunction(setIsCreateModeOpen)} parentId={0} />
+        <CreateFolderFileModal toggleModal={() => toggleFunction(setIsCreateModeOpen)} />
       )}
 
       {/* ACTIONS BAR */}

@@ -7,9 +7,9 @@ export type NodeType = {
     parent: number | null;
     size?: number;
     permissions: number; // bitmask
-    createdAt: string;
-    modifiedAt: string;
-    isTrashed: boolean;
-    trashedAt: string | null;
+    created_at: string;
+    modified_at: string;
+    is_trashed: boolean;
+    trashed_at: string | null;
     content?: string | null;
 };

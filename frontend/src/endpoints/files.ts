@@ -48,3 +48,37 @@ export const createFile = async (
     const json = (await res.json()) as { ok: boolean; data: NodeType };
     return json.data;
 };
+
+
+
+/*
+    Fetches detailed information about a specific file by its primary key (pk).
+    Returns a promise that resolves to a NodeType object.
+*/
+export const getFileDetails = async (pk: number): Promise<NodeType> => {
+    if (!pk || pk <= 0) {
+        throw new Error("Invalid file ID");
+    }
+
+    const res = await fetch(`${BASE_URL}/api/files/${pk}/`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    if (!res.ok) {
+        let msg = `Failed to fetch file details (${res.status})`;
+        try {
+            const json = await res.json();
+            if (json?.message) msg = json.message;
+        } catch {
+            const text = await res.text();
+            if (text) msg = text;
+        }
+        throw new Error(msg);
+    }
+
+    const json = await res.json() as { ok: boolean; data: NodeType };
+    return json.data;
+};

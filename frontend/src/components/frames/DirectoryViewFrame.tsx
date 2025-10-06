@@ -1,3 +1,5 @@
+'use client';
+
 import { getDirContent } from "@/endpoints/dirs";
 import { useQuery } from "@tanstack/react-query";
 import Loader from "../ui/loaders/Loader";
@@ -5,6 +7,7 @@ import ListComponent from "../ui/list/ListComponent";
 import { FILE_HOVER, FILE_ICON, FOLDER_HOVER, FOLDER_ICON } from "@/constants/svgUrls";
 import EmptyDirectory from "../responses/EmptyDirectory";
 import ErrorResponse from "../responses/ErrorResponse";
+import { useRouter } from 'next/navigation';
 
 
 interface Props {
@@ -21,6 +24,9 @@ const DirectoryViewFrame: React.FC<Props> = ({ folderId }) => {
     });
     const { isPending, isFetching, isSuccess, isError, error, data, status, fetchStatus } = query;
 
+    // ROUTER
+    const router = useRouter();
+
     return (
         <div className="flex flex-col items-center align-middle p-4 gap-2 h-screen w-screen">
 
@@ -33,6 +39,13 @@ const DirectoryViewFrame: React.FC<Props> = ({ folderId }) => {
                     <ListComponent title={node.name} key={node.id}
                         icon={node.node_type === 'DIRECTORY' ? FOLDER_ICON : FILE_ICON}
                         hoverIcon={node.node_type === 'DIRECTORY' ? FOLDER_HOVER : FILE_HOVER}
+                        onClick={() => {
+                            if (node.node_type === "DIRECTORY") {
+                                router.push(`/dirs/${node.id}`);
+                            } else {
+                                router.push(`/files/${node.id}`);
+                            }
+                        }}
                     />
                 ))
             )}

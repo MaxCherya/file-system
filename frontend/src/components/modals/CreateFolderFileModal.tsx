@@ -6,7 +6,7 @@ import { toggleFunction } from "@/utils/lib_funcs";
 import FolderCreateForm from "../forms/FolderCreateForm";
 import FileCreateForm from "../forms/FileCreateForm";
 
-const CreateFolderFileModal: React.FC<{ toggleModal: () => void, parentId?: number }> = ({ toggleModal, parentId = 0 }) => {
+const CreateFolderFileModal: React.FC<{ toggleModal: () => void, parentId?: number }> = ({ toggleModal, parentId = undefined }) => {
 
     // STATES
     const [isFile, setIsFile] = useState(true);
@@ -29,7 +29,7 @@ const CreateFolderFileModal: React.FC<{ toggleModal: () => void, parentId?: numb
                 </div>
 
                 {isFile ? (
-                    <FileCreateForm onCreated={toggleModal} />
+                    <FileCreateForm onCreated={toggleModal} parentFolderId={parentId} />
 
                 ) :
                     <FolderCreateForm parentFolderId={parentId} onCreated={toggleModal} />
