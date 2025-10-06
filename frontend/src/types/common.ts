@@ -3,7 +3,7 @@
 export type NodeType = {
     id: number;
     name: string;
-    nodeType: 'FILE' | 'DIRECTORY';
+    node_type: 'FILE' | 'DIRECTORY';
     parent: number | null;
     size?: number;
     permissions: number; // bitmask

@@ -18,9 +18,62 @@ export const getDirContent = async (pk?: number): Promise<NodeType[]> => {
     })
 
     if (!res.ok) {
-        throw new Error(`Failed to fetch directory content (status ${res.status})`);
+        let msg = `Failed to fetch directory content (${res.status})`;
+        try {
+            const errJson = await res.json();
+            if (errJson?.message) msg = errJson.message;
+        } catch {
+            const text = await res.text();
+            if (text) msg = text;
+        }
+        throw new Error(msg);
     }
 
     const json = await res.json() as { ok: boolean; data: NodeType[] };
     return json.data;
 }
+
+
+
+/*
+    Creates a new directory (folder).
+    Accepts name, optional parent_id, and optional permissions bitmask.
+    Returns a promise that resolves to the created NodeType.
+*/
+export const createFolder = async (
+    name: string,
+    parentId?: number | null,
+    permissions?: number
+): Promise<NodeType> => {
+    if (!name || !name) {
+        throw new Error("Folder name is required");
+    }
+
+    const payload: Record<string, any> = {
+        name: name,
+        node_type: "DIRECTORY",
+        parent_id: parentId == (0 || null || undefined) ? null : parentId,
+        permissions: permissions || undefined,
+    };
+
+    const res = await fetch(`${BASE_URL}/api/dirs/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+        let msg = `Failed to create folder (${res.status})`;
+        try {
+            const errJson = await res.json();
+            if (errJson?.message) msg = errJson.message;
+        } catch {
+            const text = await res.text();
+            if (text) msg = text;
+        }
+        throw new Error(msg);
+    }
+
+    const json = await res.json() as { ok: boolean; data: NodeType };
+    return json.data;
+};

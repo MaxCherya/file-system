@@ -1,40 +1,33 @@
 'use client';
 
-import ListComponent from "@/components/ui/list/ListComponent";
-import Loader from "@/components/ui/loaders/Loader";
-import { FILE_HOVER, FILE_ICON, FOLDER_HOVER, FOLDER_ICON } from "@/constants/svgUrls";
-import { getDirContent } from "@/endpoints/dirs";
-import { useQuery } from "@tanstack/react-query";
+import DirectoryViewFrame from "@/components/frames/DirectoryViewFrame";
+import CreateFolderFileModal from "@/components/modals/CreateFolderFileModal";
+import ModalButton from "@/components/ui/btns/ModalButton";
+import { toggleFunction } from "@/utils/lib_funcs";
+import { useState } from "react";
 
 export default function Home() {
 
-  // TANSTACK QUERY INIT
-  const query = useQuery({
-    queryKey: ["directory", 0],
-    queryFn: () => getDirContent(0),
-  });
-  const { isPending, isFetching, isSuccess, isError, error, data, status, fetchStatus } = query;
+  // STATES
+  const [isCreateModeOpen, setIsCreateModeOpen] = useState(false);
 
   return (
-    <div className="flex flex-col items-center justify-center align-middle p-4 gap-2 h-screen w-screen">
+    <div className="h-screen overflow-x-hidden space-y-4">
 
-      {/* LOADING STATE */}
-      {(isPending || isFetching) && <Loader />}
-
-      {/* DISPLAYING OF CONTENT */}
-      {!isFetching && isSuccess && data && data.length > 0 && (
-        data.map((node) => (
-          <ListComponent title={node.name}
-            icon={node.nodeType === 'DIRECTORY' ? FOLDER_ICON : FILE_ICON}
-            hoverIcon={node.nodeType === 'DIRECTORY' ? FOLDER_HOVER : FILE_HOVER}
-          />
-        ))
+      {/* CREATE MODAL */}
+      {isCreateModeOpen && (
+        <CreateFolderFileModal toggleModal={() => toggleFunction(setIsCreateModeOpen)} parentId={0} />
       )}
 
-      {/* NO DATA CASE */}
-      {!isFetching && isSuccess && data && data.length === 0 && (
-        <div className="text-gray-500">This directory is empty.</div>
-      )}
+      {/* ACTIONS BAR */}
+      <div className="w-full flex flex-row justify-end gap-2 p-4">
+        <ModalButton label="Add To Folder" onClick={() => toggleFunction(setIsCreateModeOpen)} />
+      </div>
+
+      {/* DIRECTORY VIEW FRAME */}
+      <div className="w-full h-full">
+        <DirectoryViewFrame folderId={0} />
+      </div>
 
     </div>
   );

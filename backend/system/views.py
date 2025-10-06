@@ -34,13 +34,13 @@ class DirectoryView(APIView):
         if parent_id not in (None, "", "0"):
             parent = get_object_or_404(Node, id=parent_id, node_type=Node.NodeTypes.DIRECTORY, is_trashed=False)
             if not (parent.permissions & Node.Permissions.READ):
-                return Response({"error": "Permission denied: READ"}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"message": "Permission denied: READ"}, status=status.HTTP_403_FORBIDDEN)
         
         # BUILDING QUERY
         if order == "desc":
             sort_field = f"-{sort_field}"
         qs = Node.objects.filter(is_trashed=False)
-        if parent_id is None:
+        if parent_id in(None, "", "0"):
             qs = qs.filter(parent__isnull=True)
         else:
             qs = qs.filter(parent_id=parent_id)
@@ -65,33 +65,34 @@ class DirectoryView(APIView):
         permissions = data.get('permissions') # optional
         
         if not (name and node_type):
-            return Response({'error': 'Required data is missing'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'Required data is missing'}, status=status.HTTP_400_BAD_REQUEST)
         
         if node_type != Node.NodeTypes.DIRECTORY:
-            return Response({'error': 'Only directory creations are allowed here.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if parent_id:
+            return Response({'message': 'Only directory creations are allowed here.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        parent = None
+        if parent_id not in (None, ""):
             parent = Node.objects.filter(id=parent_id, is_trashed=False).first()
             if not parent:
-                return Response({'error': 'You are trying to upload to the wrong folder.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message': 'You are trying to upload to the wrong folder.'}, status=status.HTTP_400_BAD_REQUEST)
             if parent.node_type != Node.NodeTypes.DIRECTORY:
-                return Response({'error': 'The parent must be a folder'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message': 'The parent must be a folder'}, status=status.HTTP_400_BAD_REQUEST)
             if not (parent.permissions & Node.Permissions.WRITE):
-                return Response({"error": "Permission denied: WRITE on parent."}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"message": "Permission denied: WRITE on parent."}, status=status.HTTP_403_FORBIDDEN)
             
         if permissions is None:
             permissions = Node.Permissions.READ | Node.Permissions.WRITE | Node.Permissions.DELETE
         try:
             permissions = int(permissions)
         except (TypeError, ValueError):
-            return Response({"error": "Incorrect permissions code"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Incorrect permissions code"}, status=status.HTTP_400_BAD_REQUEST)
         if permissions < 0 or permissions > 15:
-            return Response({"error": "Incorrect permissions code"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Incorrect permissions code"}, status=status.HTTP_400_BAD_REQUEST)
 
         # DUPLICATE CHECK
         is_duplicate = Node.objects.filter(name=name, node_type=Node.NodeTypes.DIRECTORY, parent_id=(parent.id if parent else None), is_trashed=False).exists()
         if is_duplicate:
-            return Response({'error': 'Folder with this name already exists here.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'Folder with this name already exists here.'}, status=status.HTTP_400_BAD_REQUEST)
         
         # SERIALIZER AND RESPONSE
         payload = {
@@ -120,33 +121,33 @@ class DirectoryView(APIView):
         dir = get_object_or_404(Node, id=pk, is_trashed=False, node_type=Node.NodeTypes.DIRECTORY)
 
         if not (dir.permissions & Node.Permissions.WRITE):
-            return Response({"error": "Permission denied: WRITE on directory."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Permission denied: WRITE on directory."}, status=status.HTTP_403_FORBIDDEN)
         
         # CHECKS
         parent = None
         if parent_id:
             parent = Node.objects.filter(id=parent_id, is_trashed=False, node_type=Node.NodeTypes.DIRECTORY).first()
             if not parent:
-                return Response({'error': 'Invalid parent'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'message': 'Invalid parent'}, status=status.HTTP_404_NOT_FOUND)
             if not (parent.permissions & Node.Permissions.WRITE):
-                return Response({"error": "Permission denied: WRITE on parent."}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"message": "Permission denied: WRITE on parent."}, status=status.HTTP_403_FORBIDDEN)
             cur = parent
             while cur:
                 if cur.id == dir.id:
-                    return Response({'error': 'Cannot move a directory into its own subtree.'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'message': 'Cannot move a directory into its own subtree.'}, status=status.HTTP_400_BAD_REQUEST)
                 cur = cur.parent
             
         if name and not parent_id:
             duplicate = Node.objects.filter(parent_id=(dir.parent.id if dir.parent else None), name=name, node_type=Node.NodeTypes.DIRECTORY, is_trashed=False).exclude(id=dir.id).exists()
             if duplicate:
-                return Response({'error': 'The folder with this name already exists'}, status=status.HTTP_409_CONFLICT)
+                return Response({'message': 'The folder with this name already exists'}, status=status.HTTP_409_CONFLICT)
             
         if parent_id is not None or name:
             target_name = name or dir.name
             target_parent_id = parent.id if parent else None
             duplicate = Node.objects.filter(parent_id=target_parent_id, is_trashed=False, node_type=Node.NodeTypes.DIRECTORY, name=target_name).exclude(id=dir.id).exists()
             if duplicate:
-                return Response({'error': 'The folder with this name already exists'}, status=status.HTTP_409_CONFLICT)
+                return Response({'message': 'The folder with this name already exists'}, status=status.HTTP_409_CONFLICT)
 
         # SERIALIZER AND RESPONSE
         payload = {}
@@ -169,12 +170,12 @@ class DirectoryView(APIView):
     def delete(self, request, pk):
         # CHECKS
         if not pk:
-            return Response({'error': 'Folder id is required to perform this action'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'Folder id is required to perform this action'}, status=status.HTTP_400_BAD_REQUEST)
         
         dir = get_object_or_404(Node, id=pk, is_trashed=False, ode_type=Node.NodeTypes.DIRECTORY)
 
         if not (dir.permissions & Node.Permissions.DELETE):
-            return Response({"error": "Permission denied: DELETE"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Permission denied: DELETE"}, status=status.HTTP_403_FORBIDDEN)
 
         # GATHERING ALL CHILDREN
         # AND ADDITIONAL CHECKS
@@ -191,7 +192,7 @@ class DirectoryView(APIView):
         unauthorized = [n.name for n in nodes if not (n.permissions & Node.Permissions.DELETE)]
 
         if unauthorized:
-            return Response({"error": "Permission denied to delete some items.", "items": unauthorized}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Permission denied to delete some items.", "items": unauthorized}, status=status.HTTP_403_FORBIDDEN)
 
         # SOFT DELETE ALL AT ONCE AND RESPONSE
         now = timezone.now()
@@ -212,7 +213,7 @@ class FileView(APIView):
         file = get_object_or_404(Node, id=pk, is_trashed=False, node_type=Node.NodeTypes.FILE)
 
         if not (file.permissions & Node.Permissions.READ):
-            return Response({"error": "Permission denied: READ"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Permission denied: READ"}, status=status.HTTP_403_FORBIDDEN)
 
         return Response({"ok": True, "data": NodeSerializer(file).data}, status=status.HTTP_200_OK)
 
@@ -230,29 +231,29 @@ class FileView(APIView):
 
         # CHECKS
         if not name:
-            return Response({"error": "Name is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Name is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         parent = None
         if parent_id not in (None, ""):
             parent = Node.objects.filter(id=parent_id, is_trashed=False).first()
             if not parent:
-                return Response({"error": "Parent not found or trashed"}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"message": "Parent not found or trashed"}, status=status.HTTP_404_NOT_FOUND)
             if parent.node_type != Node.NodeTypes.DIRECTORY:
-                return Response({"error": "Parent must be a directory"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"message": "Parent must be a directory"}, status=status.HTTP_400_BAD_REQUEST)
             if not (parent.permissions & Node.Permissions.WRITE):
-                return Response({"error": "Permission denied: WRITE on parent"}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"message": "Permission denied: WRITE on parent"}, status=status.HTTP_403_FORBIDDEN)
             
         if permissions is None:
             permissions = Node.Permissions.READ | Node.Permissions.WRITE | Node.Permissions.DELETE
         try:
             permissions = int(permissions)
         except (TypeError, ValueError):
-            return Response({"error": "Incorrect permissions code"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Incorrect permissions code"}, status=status.HTTP_400_BAD_REQUEST)
         if permissions < 0 or permissions > 15:
-            return Response({"error": "Incorrect permissions code"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Incorrect permissions code"}, status=status.HTTP_400_BAD_REQUEST)
 
         if Node.objects.filter(parent_id=(parent.id if parent else None), name=name, node_type=Node.NodeTypes.FILE, is_trashed=False).exists():
-            return Response({"error": "File with this name already exists here."}, status=status.HTTP_409_CONFLICT)
+            return Response({"message": "File with this name already exists here."}, status=status.HTTP_409_CONFLICT)
 
         # PAYLOAD, SERIALIZER AND RESPONSE
         payload = {
@@ -283,7 +284,7 @@ class FileView(APIView):
 
         # CHECKS
         if not (file.permissions & Node.Permissions.WRITE):
-            return Response({"error": "Permission denied: WRITE on file"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Permission denied: WRITE on file"}, status=status.HTTP_403_FORBIDDEN)
 
         parent = file.parent
         if parent_id is not None:
@@ -292,16 +293,16 @@ class FileView(APIView):
             else:
                 parent = Node.objects.filter(id=parent_id, is_trashed=False, node_type=Node.NodeTypes.DIRECTORY).first()
                 if not parent:
-                    return Response({"error": "Destination parent not found or not a directory"}, status=status.HTTP_404_NOT_FOUND)
+                    return Response({"message": "Destination parent not found or not a directory"}, status=status.HTTP_404_NOT_FOUND)
                 if not (parent.permissions & Node.Permissions.WRITE):
-                    return Response({"error": "Permission denied: WRITE on destination directory"}, status=status.HTTP_403_FORBIDDEN)
+                    return Response({"message": "Permission denied: WRITE on destination directory"}, status=status.HTTP_403_FORBIDDEN)
 
         if (name is not None) or (parent_id is not None):
             target_name = name or file.name
             target_parent_id = parent.id if parent else None
             dup = Node.objects.filter(parent_id=target_parent_id, name=target_name, node_type=Node.NodeTypes.FILE, is_trashed=False).exclude(id=file.id).exists()
             if dup:
-                return Response({"error": "A file with this name already exists in the destination."}, status=status.HTTP_409_CONFLICT)
+                return Response({"message": "A file with this name already exists in the destination."}, status=status.HTTP_409_CONFLICT)
 
         # PAYLOAD, SERIALIZER AND RESPONSE
         payload = {}
@@ -328,7 +329,7 @@ class FileView(APIView):
         file = get_object_or_404(Node, id=pk, is_trashed=False, node_type=Node.NodeTypes.FILE)
 
         if not (file.permissions & Node.Permissions.DELETE):
-            return Response({"error": "Permission denied: DELETE"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Permission denied: DELETE"}, status=status.HTTP_403_FORBIDDEN)
 
         now = timezone.now()
         Node.objects.filter(id=file.id).update(is_trashed=True, trashed_at=now)
@@ -381,16 +382,16 @@ class TrashView(APIView):
         else:
             dest_parent = Node.objects.filter(id=dest_parent_id, is_trashed=False, node_type=Node.NodeTypes.DIRECTORY).first()
             if not dest_parent:
-                return Response({"error": "Destination parent not found or not a directory."}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"message": "Destination parent not found or not a directory."}, status=status.HTTP_404_NOT_FOUND)
 
         # CHECKS OF PERMISSION FOR THE PARENT
         if dest_parent and not (dest_parent.permissions & Node.Permissions.WRITE):
-            return Response({"error": "Permission denied: WRITE on destination directory."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Permission denied: WRITE on destination directory."}, status=status.HTTP_403_FORBIDDEN)
 
         # DUPLICATE CHECK
         target_parent_id = dest_parent.id if dest_parent else None
         if Node.objects.filter(parent_id=target_parent_id, name=node.name, node_type=node.node_type, is_trashed=False).exclude(id=node.id).exists():
-            return Response({"error": "An item with this name already exists at destination."}, status=status.HTTP_409_CONFLICT)
+            return Response({"message": "An item with this name already exists at destination."}, status=status.HTTP_409_CONFLICT)
 
         # RESTORE PROCESS AND LOGIC
         if node.node_type == Node.NodeTypes.FILE:
@@ -426,7 +427,7 @@ class TrashView(APIView):
         node = get_object_or_404(Node, id=pk, is_trashed=True)
 
         if not (node.permissions & Node.Permissions.DELETE):
-            return Response({"error": "Permission denied: DELETE on item."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Permission denied: DELETE on item."}, status=status.HTTP_403_FORBIDDEN)
 
         # RESPONSE FOR FILE
         if node.node_type == Node.NodeTypes.FILE:
@@ -445,11 +446,11 @@ class TrashView(APIView):
 
         alive_exists = Node.objects.filter(id__in=ids, is_trashed=False).exists()
         if alive_exists:
-            return Response({"error": "Cannot purge: some descendants are not in trash."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Cannot purge: some descendants are not in trash."}, status=status.HTTP_400_BAD_REQUEST)
 
         lacking = [n.id for n in Node.objects.filter(id__in=ids) if not (n.permissions & Node.Permissions.DELETE)]
         if lacking.exists():
-            return Response({"error": "Permission denied to purge some items."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Permission denied to purge some items."}, status=status.HTTP_403_FORBIDDEN)
 
         # FINAL FOR DIRECTORY
         Node.objects.filter(id__in=ids).delete()
@@ -556,7 +557,7 @@ class PermissionsView(APIView):
         node = get_object_or_404(Node, id=pk)
 
         if not (node.permissions & Node.Permissions.ADMIN):
-            return Response({"error": "Permission denied: ADMIN required."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Permission denied: ADMIN required."}, status=status.HTTP_403_FORBIDDEN)
 
         # INITIAL DATA GET
         data = request.data or {}
@@ -565,7 +566,7 @@ class PermissionsView(APIView):
         remove_flags = data.get("remove", None)
 
         if new_mask is None and add_flags is None and remove_flags is None:
-            return Response({"error": "Provide 'permissions' bitmask OR 'add'/'remove' flag lists."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Provide 'permissions' bitmask OR 'add'/'remove' flag lists."}, status=status.HTTP_400_BAD_REQUEST)
 
         mask = node.permissions
 
@@ -574,9 +575,9 @@ class PermissionsView(APIView):
             try:
                 new_mask = int(new_mask)
             except (TypeError, ValueError):
-                return Response({"error": "permissions must be an integer (0..15)."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"message": "permissions must be an integer (0..15)."}, status=status.HTTP_400_BAD_REQUEST)
             if new_mask < 0 or new_mask > 15:
-                return Response({"error": "permissions must be in range 0..15."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"message": "permissions must be in range 0..15."}, status=status.HTTP_400_BAD_REQUEST)
             mask = new_mask
 
         # MASK CONVERTION REMOVE/ADD FLAGS
@@ -586,7 +587,7 @@ class PermissionsView(APIView):
             if remove_flags is not None:
                 mask &= ~to_bits(remove_flags)
         except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         node.permissions = mask
         node.save(update_fields=["permissions"])
