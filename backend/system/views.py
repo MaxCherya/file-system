@@ -22,8 +22,6 @@ class DirectoryView(APIView):
         sort = request.query_params.get("sort", "name")
         order = request.query_params.get("order", 'desc')
 
-        print(parent_id)
-
         # WHITELISTING USER'S INPUT
         # FOR SECURITY REASONS
         sort_map = {
@@ -175,7 +173,7 @@ class DirectoryView(APIView):
         if not pk:
             return Response({'message': 'Folder id is required to perform this action'}, status=status.HTTP_400_BAD_REQUEST)
         
-        dir = get_object_or_404(Node, id=pk, is_trashed=False, ode_type=Node.NodeTypes.DIRECTORY)
+        dir = get_object_or_404(Node, id=pk, is_trashed=False, node_type=Node.NodeTypes.DIRECTORY)
 
         if not (dir.permissions & Node.Permissions.DELETE):
             return Response({"message": "Permission denied: DELETE"}, status=status.HTTP_403_FORBIDDEN)

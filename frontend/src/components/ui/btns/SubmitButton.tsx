@@ -11,6 +11,7 @@ const SubmitButton: React.FC<{ onClick?: () => void; label: string; className?: 
             type="submit"
             className={`bg-green-600 p-2 text-white rounded-lg hover:bg-green-700 transition duration-300 cursor-pointer ${className}`}
             disabled={isSubmitting}
+            onClick={onClick}
         >
             {isSubmitting ? loadLabel : label}
         </button>

@@ -75,3 +75,38 @@ export const createFolder = async (
     const json = await res.json() as { ok: boolean; data: NodeType };
     return json.data;
 };
+
+
+
+/*
+    Soft-deletes a folder and all its descendants.
+    Returns the number of trashed nodes (folder + children).
+ */
+export async function deleteFolder(pk: number): Promise<number> {
+    if (!pk || pk <= 0) throw new Error("Invalid folder id");
+
+    const res = await fetch(`${BASE_URL}/api/dirs/${pk}/`, {
+        method: "DELETE",
+    });
+
+    if (!res.ok) {
+        let msg = `Failed to delete folder (${res.status})`;
+        try {
+            const j = await res.json();
+            if (j?.message) {
+                if (Array.isArray(j.items) && j.items.length) {
+                    msg = `${j.message}: ${j.items.join(", ")}`;
+                } else {
+                    msg = j.message;
+                }
+            }
+        } catch {
+            const text = await res.text();
+            if (text) msg = text;
+        }
+        throw new Error(msg);
+    }
+
+    const json = (await res.json()) as { ok: boolean; trashed_count: number };
+    return json.trashed_count;
+}

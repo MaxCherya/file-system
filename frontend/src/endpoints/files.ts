@@ -82,3 +82,31 @@ export const getFileDetails = async (pk: number): Promise<NodeType> => {
     const json = await res.json() as { ok: boolean; data: NodeType };
     return json.data;
 };
+
+
+
+/*
+    Soft-deletes a single file by id.
+    Returns true on success.
+ */
+export async function deleteFile(pk: number): Promise<boolean> {
+    if (!pk || pk <= 0) throw new Error("Invalid file id");
+
+    const res = await fetch(`${BASE_URL}/api/files/${pk}/`, {
+        method: "DELETE",
+    });
+
+    if (!res.ok) {
+        let msg = `Failed to delete file (${res.status})`;
+        try {
+            const j = await res.json();
+            if (j?.message) msg = j.message;
+        } catch {
+            const text = await res.text();
+            if (text) msg = text;
+        }
+        throw new Error(msg);
+    }
+
+    return true;
+}
