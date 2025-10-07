@@ -2,6 +2,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import dj_database_url
+from . utils import split_env
 
 load_dotenv()
 
@@ -15,11 +16,20 @@ SECRET_KEY = os.getenv('SECURITY_KEY')
 IS_PRODUCTION = True if os.getenv('MODE') == 'production' else False
 DEBUG = not IS_PRODUCTION
 
-ALLOWED_HOSTS = ['prod'] if IS_PRODUCTION else ['*']
+ALLOWED_HOSTS = split_env("ALLOWED_HOSTS") if IS_PRODUCTION else ["*"]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-] if not IS_PRODUCTION else []
+CORS_ALLOWED_ORIGINS = (
+    split_env("CORS_ALLOWED_ORIGINS") if IS_PRODUCTION else ["http://localhost:3000", "http://127.0.0.1:3000"]
+)
+
+CSRF_TRUSTED_ORIGINS = split_env("CSRF_TRUSTED_ORIGINS") or []
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+if IS_PRODUCTION:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 
 # ============================= APP DEF ================================ #
