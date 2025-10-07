@@ -21,7 +21,7 @@ const DirectoryViewFrame: React.FC<Props> = ({ folderId }) => {
     const router = useRouter();
 
     // Sorting state
-    const [sort, setSort] = useState<SortKey>("name");
+    const [sort, setSort] = useState<SortKey>("type");
     const [order, setOrder] = useState<SortOrder>("desc");
 
     // Query
