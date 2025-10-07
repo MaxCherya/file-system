@@ -41,7 +41,7 @@ export async function restoreTrashItem(
     const body: Record<string, any> = {};
     if (destParentId !== undefined) body.parent_id = destParentId;
 
-    const res = await fetch(`${BASE_URL}/api/trash/${pk}/`, {
+    const res = await fetch(`${BASE_URL}/api/trash/${pk}/restore/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -69,7 +69,7 @@ export async function restoreTrashItem(
 export async function purgeTrashItem(pk: number): Promise<number> {
     if (!pk || pk <= 0) throw new Error("Invalid item id");
 
-    const res = await fetch(`${BASE_URL}/api/trash/${pk}/`, { method: "DELETE" });
+    const res = await fetch(`${BASE_URL}/api/trash/${pk}/purge/`, { method: "DELETE" });
 
     if (!res.ok) {
         let msg = `Failed to purge item (${res.status})`;

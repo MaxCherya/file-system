@@ -13,3 +13,10 @@ export type NodeType = {
     trashed_at: string | null;
     content?: string | null;
 };
+
+
+
+export type TreeNode = NodeType & {
+    children: TreeNode[];
+    __orphan?: boolean;
+};

@@ -430,12 +430,10 @@ class TrashView(APIView):
         if not (node.permissions & Node.Permissions.DELETE):
             return Response({"message": "Permission denied: DELETE on item."}, status=status.HTTP_403_FORBIDDEN)
 
-        # RESPONSE FOR FILE
         if node.node_type == Node.NodeTypes.FILE:
             node.delete()
             return Response({"ok": True}, status=status.HTTP_200_OK)
 
-        # FOR DIRECTORIES WE DELETE ALSO ALL OF ITS CHILDREN
         ids = [node.id]
         frontier = [node.id]
         while frontier:
@@ -445,15 +443,16 @@ class TrashView(APIView):
             ids.extend(children)
             frontier = children
 
-        alive_exists = Node.objects.filter(id__in=ids, is_trashed=False).exists()
-        if alive_exists:
+        if Node.objects.filter(id__in=ids, is_trashed=False).exists():
             return Response({"message": "Cannot purge: some descendants are not in trash."}, status=status.HTTP_400_BAD_REQUEST)
 
-        lacking = [n.id for n in Node.objects.filter(id__in=ids) if not (n.permissions & Node.Permissions.DELETE)]
-        if lacking.exists():
-            return Response({"message": "Permission denied to purge some items."}, status=status.HTTP_403_FORBIDDEN)
+        lacking_ids = [
+            n.id for n in Node.objects.filter(id__in=ids).only("id", "permissions").iterator()
+            if not (n.permissions & Node.Permissions.DELETE)
+        ]
+        if lacking_ids:
+            return Response({"message": "Permission denied to purge some items.", "items": lacking_ids}, status=status.HTTP_403_FORBIDDEN)
 
-        # FINAL FOR DIRECTORY
         Node.objects.filter(id__in=ids).delete()
         return Response({"ok": True, "purged_count": len(ids)}, status=status.HTTP_200_OK)
     
