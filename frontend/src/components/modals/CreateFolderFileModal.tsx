@@ -15,7 +15,7 @@ const CreateFolderFileModal: React.FC<{ toggleModal: () => void, parentId?: numb
         <div className="w-screen h-screen flex flex-col items-center justify-center align-middle bg-black/85 fixed z-[1000]">
 
             {/* CLOSE ICON */}
-            <span className="fixed top-8 right-8 text-red-500 font-bold bg-white p-2 rounded-full cursor-pointer hover:bg-blue-600 hover:text-white"
+            <span className="fixed top-20 right-8 text-red-500 font-bold bg-white p-2 rounded-full cursor-pointer hover:bg-blue-600 hover:text-white"
                 onClick={toggleModal}
             >X</span>
 
