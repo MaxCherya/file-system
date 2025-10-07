@@ -29,14 +29,3 @@
 - **GET `/search`** → search files/dirs by name or content (`?q=term&in=name|content|both`)
 
 ---
-
-## 🔐 Permissions Endpoints
-
-- **GET `/perms/{id}`** → get permissions for a node
-- **PATCH `/perms/{id}`** → update permissions (requires ADMIN flag)
-
----
-
-## (Optional but nice-to-have)
-
-- **GET `/meta/{id}`** → get only metadata (size, created_at, modified_at, type) without full content (useful for directories)

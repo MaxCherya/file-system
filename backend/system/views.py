@@ -601,3 +601,41 @@ class PermissionsView(APIView):
         }
 
         return Response({"ok": True, "data": payload}, status=status.HTTP_200_OK)
+    
+
+
+class AllDirectoriesView(APIView):
+    """
+    Returns all available (non-trashed) directories.
+    Used for move/select destination lists.
+    """
+
+    def get(self, request):
+        qs = (
+            Node.objects.filter(is_trashed=False, node_type=Node.NodeTypes.DIRECTORY)
+            .only("id", "name", "parent_id", "permissions", "created_at")
+            .order_by("name")
+        )
+
+        ser = NodeSerializer(qs, many=True)
+        return Response({"ok": True, "data": ser.data}, status=status.HTTP_200_OK)
+    
+
+
+class DirectoryDetailView(APIView):
+    """
+        Get details about a specific directory by its ID.
+    """
+
+    def get(self, request, pk):
+        directory = get_object_or_404(
+            Node,
+            id=pk,
+            is_trashed=False,
+            node_type=Node.NodeTypes.DIRECTORY
+        )
+
+        if not (directory.permissions & Node.Permissions.READ):
+            return Response({"message": "Permission denied: READ"}, status=status.HTTP_403_FORBIDDEN)
+
+        return Response({"ok": True, "data": NodeSerializer(directory).data}, status=status.HTTP_200_OK)

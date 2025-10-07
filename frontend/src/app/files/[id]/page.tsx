@@ -1,12 +1,20 @@
 'use client';
 
-import FileViewFrame from "@/components/frames/FileViewFrame";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteFile } from "@/endpoints/files";
 import { toast } from "react-toastify";
+
+import FileViewFrame from "@/components/frames/FileViewFrame";
 import ModalButton from "@/components/ui/btns/ModalButton";
 import SubmitButton from "@/components/ui/btns/SubmitButton";
+
+import FileEditForm from "@/components/forms/FileEditForm";
+import { deleteFile, getFileDetails } from "@/endpoints/files";
+import { useQuery } from "@tanstack/react-query";
+
+import Loader from "@/components/ui/loaders/Loader";
+import Modal from "@/components/modals/Modal";
 
 export default function Home() {
     // PARAMS
@@ -15,6 +23,17 @@ export default function Home() {
 
     const qc = useQueryClient();
     const router = useRouter();
+
+    // MODAL STATE
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const toggleEdit = () => setIsEditOpen((p) => !p);
+
+    // FETCH FILE DETAILS (for edit form)
+    const { data: fileData, isFetching: loadingFile } = useQuery({
+        queryKey: ["file", fileId],
+        queryFn: () => getFileDetails(fileId),
+        enabled: !!fileId,
+    });
 
     // DELETE MUTATION
     const delMutation = useMutation({
@@ -39,22 +58,43 @@ export default function Home() {
         delMutation.mutate(fileId);
     };
 
-    const handleEdit = () => {
-        toast.info("Edit feature coming soon ✍️");
-    };
-
     return (
         <div className="h-screen overflow-x-hidden space-y-4">
             {/* ACTIONS BAR */}
             <div className="w-full flex flex-row justify-end gap-2 p-4">
-                <ModalButton label="Edit File" onClick={handleEdit} />
-                <SubmitButton label="Delete File" loadLabel="Deleting..." onClick={handleDelete} isSubmitting={delMutation.isPending} className="!bg-red-500 hover:!bg-red-600 disabled:opacity-60" />
+                <ModalButton label="Edit File" onClick={toggleEdit} />
+                <SubmitButton
+                    label="Delete File"
+                    loadLabel="Deleting..."
+                    onClick={handleDelete}
+                    isSubmitting={delMutation.isPending}
+                    className="!bg-red-500 hover:!bg-red-600 disabled:opacity-60"
+                />
             </div>
 
             {/* FILE VIEW */}
             <div className="w-full h-full">
                 <FileViewFrame fileId={fileId} />
             </div>
+
+            {/* EDIT MODAL */}
+            {isEditOpen && (
+                <Modal isOpen={isEditOpen} onClose={toggleEdit}>
+                    {loadingFile ? (
+                        <Loader />
+                    ) : fileData ? (
+                        <FileEditForm
+                            file={fileData}
+                            onUpdated={() => {
+                                toggleEdit();
+                                qc.invalidateQueries({ queryKey: ["file", fileId] });
+                            }}
+                        />
+                    ) : (
+                        <p className="text-gray-600">Failed to load file details</p>
+                    )}
+                </Modal>
+            )}
         </div>
     );
 }

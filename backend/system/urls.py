@@ -5,6 +5,8 @@ urlpatterns = [
     # DIRECTORIES
     path("dirs/", views.DirectoryView.as_view()),
     path("dirs/<int:pk>/", views.DirectoryView.as_view()),
+    path("all-directories/", views.AllDirectoriesView.as_view()),
+    path("dirs-detail/<int:pk>/", views.DirectoryDetailView.as_view()),
 
     # FILES
     path("files/", views.FileView.as_view()),

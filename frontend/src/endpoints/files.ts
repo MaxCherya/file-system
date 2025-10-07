@@ -110,3 +110,45 @@ export async function deleteFile(pk: number): Promise<boolean> {
 
     return true;
 }
+
+
+
+/*
+    Update a file's name, parent, and/or content.
+    - Pass `name` to rename.
+    - Pass `parentId` to move (use `null` to move to root).
+    - Pass `content` to overwrite content (size is recalculated server-side per your code).
+    Only provided fields are sent.
+ */
+export async function updateFile(
+    pk: number,
+    opts: { name?: string | null; parentId?: number | null; content?: string | null }
+): Promise<NodeType> {
+    if (!pk || pk <= 0) throw new Error("Invalid file id");
+
+    const body: Record<string, unknown> = {};
+    if (opts.name !== undefined) body.name = opts.name;
+    if (opts.parentId !== undefined) body.parent_id = opts.parentId;
+    if (opts.content !== undefined) body.content = opts.content ?? "";
+
+    const res = await fetch(`${BASE_URL}/api/files/${pk}/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+        let msg = `Failed to update file (${res.status})`;
+        try {
+            const j = await res.json();
+            if (j?.message) msg = j.message;
+        } catch {
+            const t = await res.text();
+            if (t) msg = t;
+        }
+        throw new Error(msg);
+    }
+
+    const json = (await res.json()) as { ok: boolean; data: NodeType };
+    return json.data;
+}

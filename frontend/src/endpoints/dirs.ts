@@ -110,3 +110,99 @@ export async function deleteFolder(pk: number): Promise<number> {
     const json = (await res.json()) as { ok: boolean; trashed_count: number };
     return json.trashed_count;
 }
+
+
+
+/*
+    Update a directory's name and/or parent.
+    - Pass `name` to rename.
+    - Pass `parentId` to move (use `null` to move to root).
+    Only provided fields are sent.
+ */
+export async function updateDirectory(
+    pk: number,
+    opts: { name?: string | null; parentId?: number | null }
+): Promise<NodeType> {
+    if (!pk || pk <= 0) throw new Error("Invalid directory id");
+
+    const body: Record<string, unknown> = {};
+    if (opts.name !== undefined) body.name = opts.name;
+    if (opts.parentId !== undefined) body.parent_id = opts.parentId;
+
+    const res = await fetch(`${BASE_URL}/api/dirs/${pk}/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+        let msg = `Failed to update directory (${res.status})`;
+        try {
+            const j = await res.json();
+            if (j?.message) msg = j.message;
+        } catch {
+            const t = await res.text();
+            if (t) msg = t;
+        }
+        throw new Error(msg);
+    }
+
+    const json = (await res.json()) as { ok: boolean; data: NodeType };
+    return json.data;
+}
+
+
+
+/*
+    Fetch all non-trashed directories (for move or select destination)
+*/
+export async function getAllDirectories(): Promise<NodeType[]> {
+    const res = await fetch(`${BASE_URL}/api/all-directories/`, {
+        method: "GET",
+    });
+
+    if (!res.ok) {
+        let msg = `Failed to load directories (${res.status})`;
+        try {
+            const j = await res.json();
+            if (j?.message) msg = j.message;
+        } catch {
+            const t = await res.text();
+            if (t) msg = t;
+        }
+        throw new Error(msg);
+    }
+
+    const json = (await res.json()) as { ok: boolean; data: NodeType[] };
+    return json.data;
+}
+
+
+
+/*
+    Fetch details for a specific directory by ID.
+*/
+export const getFolder = async (id: number): Promise<NodeType> => {
+    if (!id) {
+        throw new Error("Folder ID is required");
+    }
+
+    const res = await fetch(`${BASE_URL}/api/dirs-detail/${id}/`, {
+        method: "GET",
+    });
+
+    if (!res.ok) {
+        let message = `Failed to fetch folder (${res.status})`;
+        try {
+            const errJson = await res.json();
+            if (errJson?.message) message = errJson.message;
+        } catch {
+            const text = await res.text();
+            if (text) message = text;
+        }
+        throw new Error(message);
+    }
+
+    const json = await res.json() as { ok: boolean; data: NodeType };
+    return json.data;
+};
