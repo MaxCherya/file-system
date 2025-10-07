@@ -26,7 +26,7 @@ const DirectoryViewFrame: React.FC<Props> = ({ folderId }) => {
 
     // Query
     const query = useQuery({
-        queryKey: ["directory", folderId ?? 'root', { sort, order }],
+        queryKey: ["directory", folderId ?? 'root'],
         queryFn: () => getDirContent(folderId, { sort, order }),
     });
     const { isPending, isFetching, isSuccess, isError, error, data } = query;
