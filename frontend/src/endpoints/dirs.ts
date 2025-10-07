@@ -1,19 +1,22 @@
 'use client';
 
-import { BASE_URL } from "@/constants/backend"
+import { BASE_URL, SortKey, SortOrder } from "@/constants/backend"
 import { NodeType } from "@/types/common";
 
 
 /*
-    Fetches the content of a directory given
-    its primary key (pk).
-    Return a promise that resolves to an array of NodeType.
+    Fetch directory contents with optional sorting.
 */
-export const getDirContent = async (pk?: number): Promise<NodeType[]> => {
+export const getDirContent = async (
+    pk?: number,
+    opts?: { sort?: SortKey; order?: SortOrder }
+): Promise<NodeType[]> => {
+    const params = new URLSearchParams();
+    if (pk !== undefined) params.set("parent_id", String(pk));
+    if (opts?.sort) params.set("sort", opts.sort);
+    if (opts?.order) params.set("order", opts.order);
 
-    const res = await fetch(`${BASE_URL}/api/dirs/?parent_id=${pk}`, {
-        method: 'GET',
-    })
+    const res = await fetch(`${BASE_URL}/api/dirs/?${params.toString()}`, { method: "GET" });
 
     if (!res.ok) {
         let msg = `Failed to fetch directory content (${res.status})`;
@@ -27,9 +30,9 @@ export const getDirContent = async (pk?: number): Promise<NodeType[]> => {
         throw new Error(msg);
     }
 
-    const json = await res.json() as { ok: boolean; data: NodeType[] };
+    const json = (await res.json()) as { ok: boolean; data: NodeType[] };
     return json.data;
-}
+};
 
 
 

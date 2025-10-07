@@ -3,6 +3,8 @@
 export const BASE_URL = 'http://localhost:8000';
 
 
+export type SortKey = "name" | "size" | "mtime" | "type";
+export type SortOrder = "asc" | "desc";
 
 
 export const PERM = {
