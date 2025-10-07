@@ -21,8 +21,9 @@ export default function RootLayout({
           <nav className="w-full bg-blue-600 text-white px-6 py-3 flex justify-between items-center shadow-md">
             <Link href="/" className="font-semibold text-lg">📁 File System</Link>
             <div className="flex gap-4">
-              <Link href="/" className="hover:underline">Home</Link>
-              <Link href="/trash" className="hover:underline">🗑 Trash</Link>
+              <Link href="/" className="hover:underline">🏠</Link>
+              <Link href="/trash" className="hover:underline">🗑️</Link>
+              <Link href="/search" className="hover:underline">🔎</Link>
             </div>
           </nav>
 
