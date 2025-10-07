@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getDirContent } from "@/endpoints/dirs";
 import { useQuery } from "@tanstack/react-query";
 import Loader from "../ui/loaders/Loader";
@@ -25,6 +25,7 @@ const DirectoryViewFrame: React.FC<Props> = ({ folderId }) => {
     const [order, setOrder] = useState<SortOrder>("desc");
 
     // Query
+    useEffect(() => { query.refetch(); }, [sort, order]);
     const query = useQuery({
         queryKey: ["directory", folderId ?? 'root'],
         queryFn: () => getDirContent(folderId, { sort, order }),

@@ -1,6 +1,6 @@
 'use client';
 
-export const BASE_URL = 'https://file-system-e1286dbfc6c0.herokuapp.com';
+export const BASE_URL = 'http://localhost:8000';
 
 
 export type SortKey = "name" | "size" | "mtime" | "type";
