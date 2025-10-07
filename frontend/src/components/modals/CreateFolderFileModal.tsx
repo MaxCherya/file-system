@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SwitchButton from "../ui/btns/SwitchButton";
 import { toggleFunction } from "@/utils/lib_funcs";
 import FolderCreateForm from "../forms/FolderCreateForm";
@@ -11,8 +11,16 @@ const CreateFolderFileModal: React.FC<{ toggleModal: () => void, parentId?: numb
     // STATES
     const [isFile, setIsFile] = useState(true);
 
+    useEffect(() => {
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = prevOverflow;
+        };
+    }, [parentId]);
+
     return (
-        <div className="w-screen h-screen flex flex-col items-center justify-center align-middle bg-black/85 fixed z-[1000]">
+        <div className="w-screen h-screen flex flex-col items-center top-0 justify-center align-middle bg-black/85 fixed z-[1000]">
 
             {/* CLOSE ICON */}
             <span className="fixed top-20 right-8 text-red-500 font-bold bg-white p-2 rounded-full cursor-pointer hover:bg-blue-600 hover:text-white"
